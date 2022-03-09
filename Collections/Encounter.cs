@@ -112,7 +112,7 @@ namespace Resonance.Collections
         Ally = 0,
         [ChoiceName("Close Range")]
         Center = 1,
-        [ChoiceName("Ally Enemy Range")]
+        [ChoiceName("Enemy Far Range")]
         Enemy = 2
     }
 }
