@@ -75,11 +75,11 @@ namespace Resonance
 
 
             // Register all command modules.
-            Slash.RegisterCommands<CharacterModule>(377155313557831690);
-            Slash.RegisterCommands<SkillManagement>(377155313557831690);
-            Slash.RegisterCommands<InventoryManagement>(377155313557831690);
-            Slash.RegisterCommands<GameplayModule>(377155313557831690);
-            Slash.RegisterCommands<HelpModule>(377155313557831690);
+            Slash.RegisterCommands<CharacterModule>();
+            Slash.RegisterCommands<SkillManagement>();
+            Slash.RegisterCommands<InventoryManagement>();
+            Slash.RegisterCommands<GameplayModule>();
+            Slash.RegisterCommands<HelpModule>();
 
 
 
