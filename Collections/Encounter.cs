@@ -102,7 +102,8 @@ namespace Resonance.Collections
 
         public bool Equals([AllowNull] Combatant other)
         {
-            if (Actor == null) return Name == other.Name;
+            if (other == null) return false;
+            else if (other.Actor == null || Actor == null) return Name == other.Name;
             else return (Name == other.Name) && (Actor.Id == other.Actor.Id);
         }
     }

@@ -128,7 +128,7 @@ namespace Resonance.Services
 
             foreach(var c in e.Combatants)
             {
-                if(e.Current.Equals(c))
+                if(c.Equals(e.Current))
                 {
                     if(c.Actor != null)
                     {
