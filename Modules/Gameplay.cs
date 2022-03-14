@@ -89,13 +89,17 @@ namespace Resonance.Modules
 
             Mods = Math.Floor(Mods);
 
-            var Roll = Roller.Roll($"{AttributeBonus + SkillBonus + Mods}d6!e");
+            int Total = Math.Max(1,AttributeBonus + SkillBonus + (int)Mods);
+
+            
+            var Roll = Roller.Roll($"{Total}d6{(Total>1?"!e":"")}");
 
             Collections.RollData Data = new Collections.RollData();
 
             Data.Actor = C.Id;
             Data.Boosts = 0;
             Data.dice = Roll.Values.Where(x=>x.DieType == DieType.Normal && x.NumSides == 6).Select(x => (int)x.Value).ToArray();
+            Data.Technique = null;
 
             await context.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource,
                 new DiscordInteractionResponseBuilder()
@@ -107,6 +111,82 @@ namespace Resonance.Modules
                 );
         }
 
+        [SlashCommand("Tech","Roll a Technique from your active character.")]
+        public async Task Tech(InteractionContext context,[Option("Name","Name of the Technique")]string Name,[Option("Modifier","(Optional) Modifier to the roll.")]double Mods = 0)
+        {
+            User U = Utils.GetUser(context.User.Id);
+
+            if (U.Active == null)
+            {
+                await context.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource,
+                    new DiscordInteractionResponseBuilder().WithContent("You do not have an active character. Create one using the `/Character Create` command or select an existing one using `/Character Select` first!"));
+                return;
+            }
+
+            Character C = U.Active;
+
+            var Q = C.Techniques.Where(x => x.Name.ToLower().StartsWith(Name.ToLower()));
+
+            if(Q.Count() == 0)
+            {
+                await context.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource,
+                    new DiscordInteractionResponseBuilder()
+                    .WithContent($"{C.Name} does not have a technique whose name starts with \"{Name}\"."));
+                return;
+            }
+
+            var Tech = Q.FirstOrDefault();
+
+            int AttributeBonus = 0;
+            
+            switch (Tech.Attribute)
+            {
+                case Attributes.Vigor:
+                    AttributeBonus = C.Vigor;
+                    break;
+                case Attributes.Agility:
+                    AttributeBonus = C.Agility;
+                    break;
+                case Attributes.Insight:
+                    AttributeBonus = C.Insight;
+                    break;
+                case Attributes.Presence:
+                    AttributeBonus = C.Presence;
+                    break;
+            }
+
+            int SkillBonus = 0;
+
+            var Sk = C.Skills.Find(x => x.Name.ToLower() == Tech.Skill.ToLower());
+
+            if(Sk != null)
+            {
+                SkillBonus = Sk.Ranks;
+            }
+
+            Mods = Math.Floor(Mods);
+
+            int Total = Math.Max(1, AttributeBonus + SkillBonus + (int)Mods);
+
+
+            var Roll = Roller.Roll($"{Total}d6{(Total > 1 ? "!e" : "")}");
+
+            Collections.RollData Data = new Collections.RollData();
+
+            Data.Actor = C.Id;
+            Data.Boosts = 0;
+            Data.dice = Roll.Values.Where(x => x.DieType == DieType.Normal && x.NumSides == 6).Select(x => (int)x.Value).ToArray();
+            Data.Technique = string.Join("",Tech.Name.Take(3)) + string.Join("", Tech.Description.Take(3)) + (int)Tech.Action;
+
+            await context.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource,
+                new DiscordInteractionResponseBuilder()
+                    .AddEmbed(Utils.EmbedRoll(Data))
+                    .AddComponents(new DiscordComponent[]
+                    {
+                        new DiscordButtonComponent(new DiscordButtonComponent(ButtonStyle.Primary,"b"+Data.Serialize(),"Boost",false, new DiscordComponentEmoji("✨")))
+                    })
+                );
+        }
 
         [SlashCommandGroup("Encounter", "Manage Encounters in the current channel.")]
         public class CombatManager : ApplicationCommandModule

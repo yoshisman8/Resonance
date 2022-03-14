@@ -10,9 +10,10 @@ namespace Resonance.Collections
         public int[] dice { get; set; }
         public int Boosts { get; set; }
         public int Actor { get; set; }
+        public string Technique { get; set; }
         public string Serialize()
         {
-            return Actor +","+ String.Join(".",dice) + "," + Boosts;
+            return Actor +","+ String.Join(".",dice) + "," + Boosts + "," + Technique;
         }
         public RollData Deserialize(string input)
         {
@@ -23,6 +24,7 @@ namespace Resonance.Collections
                 Actor = int.Parse(vars[0]),
                 dice = die,
                 Boosts = int.Parse(vars[2]),
+                Technique = vars[3]
             };
         }
     }

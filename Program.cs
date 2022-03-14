@@ -80,6 +80,9 @@ namespace Resonance
             Slash.RegisterCommands<InventoryManagement>();
             Slash.RegisterCommands<GameplayModule>();
             Slash.RegisterCommands<HelpModule>();
+            Slash.RegisterCommands<ConditionManagement>();
+            Slash.RegisterCommands<PartyManagement>();
+            Slash.RegisterCommands<TechManagement>();
 
 
 

@@ -9,8 +9,10 @@ namespace Resonance.Collections
     {
         [BsonId]
         public int ID { get; set; }
-
+        public string Name { get; set; }
         public ulong GameMaster { get; set; }
-        public List<Character> Actors { get; set; }
+        public ulong Guild { get; set; }
+        [BsonRef("Characters")]
+        public List<Character> Actors { get; set; } = new List<Character>();
     }
 }

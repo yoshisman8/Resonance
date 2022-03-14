@@ -92,25 +92,83 @@ namespace Resonance.Services
 
             Character A = null;
 
-            if (roll.Actor != -1)
-            {
-                A = GetActor(roll.Actor);
+            A = GetActor(roll.Actor);
 
-                builder.WithTitle($"{A.Name} makes a roll!");
-
-                builder.WithThumbnail(A.Image);
-
-                builder.WithColor(new DiscordColor(A.Color));
+            if (roll.dice.Length == 1) {
+                builder.WithTitle($"{A.Name} makes a dire roll!");
             }
             else
             {
-                builder.WithTitle("Someone makes a roll.");
+                builder.WithTitle($"{A.Name} makes a roll!");
             }
 
-            sb.AppendLine(string.Join(" ", roll.dice.Select(x => Dictionaries.GameDice[x])));
-            int successes = roll.dice.Where(x => x >= 4).Count();
-            sb.AppendLine($"**{successes} Successe{(successes==1?"":"s")}!**");
+            builder.WithThumbnail(A.Image);
+
+            builder.WithColor(new DiscordColor(A.Color));
+
             
+
+            if (!roll.Technique.NullorEmpty())
+            {
+                string _Name = string.Join("", roll.Technique.Take(3));
+
+                string _Desc = string.Join("", roll.Technique.Substring(3).Take(3));
+
+                ActionType _Type = (ActionType)int.Parse(roll.Technique.Substring(6));
+
+                Tech Technique = A.Techniques.Find(x => x.Name.StartsWith(_Name) && x.Description.StartsWith(_Desc) && x.Action == _Type);
+
+                if (Technique != null)
+                {
+                    sb.AppendLine($"**[{Technique.Attribute} + {Technique.Skill}]**");
+
+                    sb.AppendLine(string.Join(" ", roll.dice.Select(x => Dictionaries.GameDice[x]))+"\n");
+
+                    int successes = roll.dice.Where(x => x >= 4).Count();
+
+                    if (roll.dice.Length == 1)
+                    {
+                        sb.AppendLine($"**{(successes > 0 ? "Critical Success!" : "Critical Failure")}!**\n");
+                    }
+                    else
+                    {
+                        sb.AppendLine($"**{successes} Successe{(successes == 1 ? "" : "s")}!**\n");
+                    }
+
+                    sb.AppendLine($"**{Technique.Name}** {(Technique.Action == ActionType.Simple ? Dictionaries.Icons["emptyDot"] : Dictionaries.Icons["dot"])}");
+
+                    sb.AppendLine($"> {Technique.Description}");
+                }
+                else
+                {
+                    sb.AppendLine(string.Join(" ", roll.dice.Select(x => Dictionaries.GameDice[x])));
+                    int successes = roll.dice.Where(x => x >= 4).Count();
+
+                    if (roll.dice.Length == 1)
+                    {
+                        sb.AppendLine($"**{(successes > 0 ? "Critical Success!" : "Critical Failure")}!**");
+                    }
+                    else
+                    {
+                        sb.AppendLine($"**{successes} Successe{(successes == 1 ? "" : "s")}!**");
+                    }
+                }
+                
+            }
+            else
+            {
+                sb.AppendLine(string.Join(" ", roll.dice.Select(x => Dictionaries.GameDice[x])));
+                int successes = roll.dice.Where(x => x >= 4).Count();
+
+                if (roll.dice.Length == 1)
+                {
+                    sb.AppendLine($"**{(successes > 0 ? "Critical Success!" : "Critical Failure")}!**");
+                }
+                else
+                {
+                    sb.AppendLine($"**{successes} Successe{(successes == 1 ? "" : "s")}!**");
+                }
+            }
 
             builder.WithDescription(sb.ToString());
             return builder.Build();

@@ -7,6 +7,7 @@ using Resonance.Services;
 using System.Linq;
 using DSharpPlus;
 using DSharpPlus.SlashCommands;
+using System.Diagnostics.CodeAnalysis;
 
 namespace Resonance.Collections
 {
@@ -75,7 +76,7 @@ namespace Resonance.Collections
                 Type = SkillType.General
             }
         };
-
+        public List<Tech> Techniques { get; set; } = new List<Tech>();
         public int GetMaxHealth()
         {
             return (int)(5 + Math.Floor((decimal)Level / 2) + Vigor);
@@ -165,26 +166,88 @@ namespace Resonance.Collections
 
                 Embed = SkillsPage.Build();
             }
+            if(page == 2)
+            {
+                var ConditionsPage = new DiscordEmbedBuilder()
+                    .WithTitle($"{Name} - Lv.{Level}")
+                    .WithColor(new DiscordColor(Color))
+                    .WithThumbnail(Image)
+                    .WithDescription($"Health [{Health}/{GetMaxHealth()}]\n{Health.Bar(GetMaxHealth(), false)}\nLuck [{Luck}/10]\n{Luck.Bar(10, true)}\n\n**Conditions**");
 
+                foreach(var con in Conditions.OrderBy(x => x.Name))
+                {
+                    ConditionsPage.AddField("• "+con.Name, con.Description);
+                }
+
+                Embed = ConditionsPage.Build();
+            }
+            if (page > 2)
+            {
+                var TechPage = new DiscordEmbedBuilder()
+                    .WithTitle($"{Name} - Lv.{Level}")
+                    .WithColor(new DiscordColor(Color))
+                    .WithThumbnail(Image)
+                    .WithDescription($"Health [{Health}/{GetMaxHealth()}]\n{Health.Bar(GetMaxHealth(), false)}\nLuck [{Luck}/10]\n{Luck.Bar(10, true)}\n\n**Techniques**");
+
+                var tech = new List<Tech>();
+                var sorted = Techniques.OrderBy(x => x.Name);
+
+                int startPoint = 0 + (4 * (page - 3));
+
+                for(int i = 0; i < 4; i++)
+                {
+                    if (startPoint + i >= Techniques.Count) break;
+                    tech.Add(Techniques[startPoint + i]);
+                }
+                foreach(var t in tech)
+                {
+                    TechPage.AddField($"• {t.Name} {(t.Action == ActionType.Simple ? $"{Dictionaries.Icons["emptyDot"]}" : $"{Dictionaries.Icons["dot"]}")}", $"> **[{t.Attribute} + {t.Skill}]**\n> {t.Description}");
+                }
+
+                Embed = TechPage.Build();
+            }
             var buttons = new List<DiscordComponent>()
             {
                 new DiscordButtonComponent(ButtonStyle.Primary,"s,0,"+Id,"Main Page"),
                 new DiscordButtonComponent(ButtonStyle.Primary,"s,1,"+Id,"Skills")
             };
 
+            if(Conditions.Count > 0)
+            {
+                buttons.Add(new DiscordButtonComponent(ButtonStyle.Primary, $"s,2,{Id}", "Conditions"));
+            }
+
             var builder = new DiscordInteractionResponseBuilder()
                 .AddEmbed(Embed)
                 .AddComponents(buttons);
 
+            if (Techniques.Count > 0)
+            {
+                int techPages = (int)Math.Ceiling(((double)Techniques.Count / (double)4));
+                var techButtons = new List<DiscordComponent>();
+
+                for (int t = 0; t < Math.Min(techPages,4); t++)
+                {
+                    techButtons.Add(new DiscordButtonComponent(ButtonStyle.Primary, $"s,{3 + t},{Id}", $"Techniques {(t + 1)}"));
+                }
+
+                builder.AddComponents(techButtons);
+            }
+
+            
+
             return builder;
         }
     }
-    public class Tracker
+    public class Tracker : IEquatable<Tracker>
     {
         public string Name { get; set; }
         public string Description { get; set; }
-        public int Value { get; set; } = 0;
-        public int Max { get; set; } = 0;
+
+        public bool Equals([AllowNull] Tracker other)
+        {
+            return (Name.ToLower() == other.Name.ToLower()) && (Description.ToLower() == other.Description.ToLower());
+        }
     }
     public class Skill
     {
@@ -202,6 +265,38 @@ namespace Resonance.Collections
         public int Quantity { get; set; } = 1;
         public string Description { get; set; }
         public int Value { get; set; } = 0;
+    }
+
+    public class Tech : IEquatable<Tech>
+    {
+        public string Name { get; set; }
+        public string Description { get; set; }
+        public ActionType Action { get; set; }
+        public string Skill { get; set; }
+        public Attributes Attribute { get; set; }
+        public bool Equals([AllowNull] Tech other)
+        {
+            return (Name.ToLower() == other.Name.ToLower()) && (Description.ToLower() == other.Description.ToLower());
+        }
+    }
+
+    public enum ActionType
+    {
+        [ChoiceName("Simple Action")]
+        Simple,
+        [ChoiceName("Complex Action")]
+        Complex
+    }
+    public enum Attributes
+    {
+        [ChoiceName("Vigor")]
+        Vigor = 1,
+        [ChoiceName("Agility")]
+        Agility = 2,
+        [ChoiceName("Insight")]
+        Insight = 3,
+        [ChoiceName("Presence")]
+        Presence = 4
     }
     public enum SkillType { [ChoiceName("General Skill. Max 3 Ranks.")]General = 3, [ChoiceName("Advanced Skill. Max 5 Ranks.")] Advanced = 5, [ChoiceName("Specialized Skill. Max 7 Ranks.")] Specialized = 7 }
     public enum ItemTypes { 

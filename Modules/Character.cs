@@ -851,4 +851,188 @@ namespace Resonance.Modules
             }
         }
     }
+    
+    [SlashCommandGroup("Conditions","Manage your active character's conditions.")]
+    public class ConditionManagement : ApplicationCommandModule
+    {
+        public Services.Utilities Utils;
+        public LiteDatabase db;
+
+        [SlashCommand("Add","Adds a condition to your active character.")]
+        public async Task Add(InteractionContext context, [Option("Name","The name of the condition")]string Name,[Option("Description","What does this condition do?")]string Description)
+        {
+            User U = Utils.GetUser(context.User.Id);
+
+            if (U.Active == null)
+            {
+                await context.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource,
+                    new DiscordInteractionResponseBuilder().WithContent("You do not have an active character. Create one using the `/Character Create` command or select an existing one using `/Character Select` first!"));
+                return;
+            }
+
+            Character C = U.Active;
+
+            Tracker Cond = new Tracker()
+            {
+                Name = Name,
+                Description = Description
+            };
+
+            C.Conditions.Add(Cond);
+
+            Utils.UpdateActor(C);
+
+            await context.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource,
+                new DiscordInteractionResponseBuilder()
+                    .WithContent($"{C.Name} Is now affected by the {Name} condition!")
+                    .AddEmbed(new DiscordEmbedBuilder()
+                        .WithTitle(Name)
+                        .WithDescription(Description)));
+        }
+
+        [SlashCommand("Remove","Remove a given condition on your active character.")]
+        public async Task Remove(InteractionContext context, [Option("Name","Name of the condition to remove")]string Name)
+        {
+            User U = Utils.GetUser(context.User.Id);
+
+            if (U.Active == null)
+            {
+                await context.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource,
+                    new DiscordInteractionResponseBuilder().WithContent("You do not have an active character. Create one using the `/Character Create` command or select an existing one using `/Character Select` first!"));
+                return;
+            }
+
+            Character C = U.Active;
+
+            var Q = C.Conditions.Where(x => x.Name.ToLower().StartsWith(Name.ToLower()));
+
+            if(Q.Count() == 0)
+            {
+                await context.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource,
+                    new DiscordInteractionResponseBuilder().WithContent($"{C.Name} is not affected by a condition whose name starts with \"{Name}\""));
+                return;
+            }
+            else
+            {
+                var Cond = Q.FirstOrDefault();
+
+                var index = C.Conditions.IndexOf(Cond);
+
+                C.Conditions.RemoveAt(index);
+
+                Utils.UpdateActor(C);
+
+                await context.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource,
+                    new DiscordInteractionResponseBuilder()
+                        .WithContent($"Removed condition {Cond.Name} from {C.Name}."));
+            }
+        }
+    }
+
+    [SlashCommandGroup("Techniques","Manage your active character's techniques.")]
+    public class TechManagement : ApplicationCommandModule
+    {
+        public Services.Utilities Utils;
+        public LiteDatabase db;
+
+        [SlashCommand("Add", "Adds a technique to your active character.")]
+        public async Task Add(InteractionContext context, 
+            [Option("Name", "The name of the technique")] string Name,
+            [Option("Actions","What action does this tecnique use?")]ActionType actionType, 
+            [Option("Attribute","What attribute is used on this Technique?")] Attributes Attribute,
+            [Option("Skill","Skill used for this Techinque.")] string Skill,
+            [Option("Description", "What does this techinque do?")] string Description)
+        {
+            User U = Utils.GetUser(context.User.Id);
+
+            if (U.Active == null)
+            {
+                await context.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource,
+                    new DiscordInteractionResponseBuilder().WithContent("You do not have an active character. Create one using the `/Character Create` command or select an existing one using `/Character Select` first!"));
+                return;
+            }
+
+            Character C = U.Active;
+
+            if (C.Techniques.Exists(x=>x.Name.ToLower() == Name.ToLower()))
+            {
+                await context.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource,
+                    new DiscordInteractionResponseBuilder()
+                    .WithContent($"{C.Name} already has a technique named \"{Name}\"!"));
+                return;
+            }
+            Tech Tech = new Tech()
+            {
+                Name = Name,
+                Action = actionType,
+                Description = Description,
+                Attribute = Attribute
+            };
+
+            var Q = C.Skills.Where(x => x.Name.ToLower().StartsWith(Skill.ToLower()));
+
+            if(Q.Count() == 0)
+            {
+                await context.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource,
+                    new DiscordInteractionResponseBuilder()
+                    .WithContent($"{C.Name} has no skill whose name starts with \"{Name}\"!"));
+                return;
+            }
+
+            Skill Sk = Q.FirstOrDefault();
+
+            Tech.Skill = Sk.Name;
+
+            C.Techniques.Add(Tech);
+
+            Utils.UpdateActor(C);
+
+            await context.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource,
+                new DiscordInteractionResponseBuilder()
+                    .WithContent($"Added Tech {Name} to {C.Name}!")
+                    .AddEmbed(new DiscordEmbedBuilder()
+                        .WithTitle($"{Name} {(actionType == ActionType.Simple?Dictionaries.Icons["emptyDot"]:Dictionaries.Icons["dot"])}")
+                        .WithColor(new DiscordColor(C.Color))
+                        .WithThumbnail(C.Image)
+                        .WithDescription($"**[{Tech.Attribute} + {Sk.Name}]**\n{Description}")));
+        }
+
+        [SlashCommand("Remove", "Remove a technique on your active character.")]
+        public async Task Remove(InteractionContext context, [Option("Name", "Name of the condition to remove")] string Name)
+        {
+            User U = Utils.GetUser(context.User.Id);
+
+            if (U.Active == null)
+            {
+                await context.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource,
+                    new DiscordInteractionResponseBuilder().WithContent("You do not have an active character. Create one using the `/Character Create` command or select an existing one using `/Character Select` first!"));
+                return;
+            }
+
+            Character C = U.Active;
+
+            var Q = C.Techniques.Where(x => x.Name.ToLower().StartsWith(Name.ToLower()));
+
+            if (Q.Count() == 0)
+            {
+                await context.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource,
+                    new DiscordInteractionResponseBuilder().WithContent($"{C.Name} does not have any techniques whose name starts with \"{Name}\""));
+                return;
+            }
+            else
+            {
+                var tech = Q.FirstOrDefault();
+
+                var index = C.Techniques.IndexOf(tech);
+
+                C.Conditions.RemoveAt(index);
+
+                Utils.UpdateActor(C);
+
+                await context.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource,
+                    new DiscordInteractionResponseBuilder()
+                        .WithContent($"Removed technique {tech.Name} from {C.Name}."));
+            }
+        }
+    }
 }

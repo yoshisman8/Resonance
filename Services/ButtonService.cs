@@ -49,7 +49,6 @@ namespace Resonance.Services
                 }
                 await e.Interaction.CreateResponseAsync(InteractionResponseType.UpdateMessage, C.Render(page));
             }
-
             else if (e.Id.StartsWith("dl"))
             {
                 int id = int.Parse(e.Id.Substring(2));
@@ -57,6 +56,12 @@ namespace Resonance.Services
                 var col = database.GetCollection<Character>("Characters");
 
                 var C = col.FindById(id);
+
+                if (e.User.Id != C.Owner)
+                {
+                    await e.Interaction.CreateResponseAsync(InteractionResponseType.Pong);
+                    return;
+                }
 
                 var User = utils.GetUser(e.User.Id);
 
@@ -80,7 +85,11 @@ namespace Resonance.Services
                 var col = database.GetCollection<Character>("Characters");
 
                 var C = col.FindById(ActorId);
-
+                if (e.User.Id != C.Owner)
+                {
+                    await e.Interaction.CreateResponseAsync(InteractionResponseType.Pong);
+                    return;
+                }
                 var sk = C.Skills[SkillIndex];
 
                 C.Skills.RemoveAt(SkillIndex);
@@ -100,7 +109,11 @@ namespace Resonance.Services
                 var col = database.GetCollection<Character>("Characters");
 
                 var C = col.FindById(ActorId);
-
+                if (e.User.Id != C.Owner)
+                {
+                    await e.Interaction.CreateResponseAsync(InteractionResponseType.Pong);
+                    return;
+                }
                 var sk = C.Inventory[Index];
 
                 C.Skills.RemoveAt(Index);
@@ -118,6 +131,12 @@ namespace Resonance.Services
                 var actors = database.GetCollection<Character>("Characters");
 
                 var a = actors.FindById(data.Actor);
+                
+                if (e.User.Id != a.Owner)
+                {
+                    await e.Interaction.CreateResponseAsync(InteractionResponseType.Pong);
+                    return;
+                }
 
                 a.Luck -= 1;
 
@@ -418,7 +437,6 @@ namespace Resonance.Services
                     }
                 }
             }
-            
             else if (e.Id.StartsWith("h"))
             {
                 string[] args = e.Id.Substring(1).Split(',');
@@ -438,18 +456,6 @@ namespace Resonance.Services
                                 "Commands are divided into 6 mayor groups: Character, Attributes, Skills, Inventory, General and Encounter commands.\n" +
                                 "Most, if not all, of these commands require you to have an **Active Character**. When you create a character using `/Characters Create`, this character is automatically assigned as your active character. You can then use the `/Character` command to switch your active character.")
                                 );
-                                builder.AddComponents(new DiscordComponent[]
-                                {
-                                    new DiscordButtonComponent(ButtonStyle.Primary,"h0,1","Characters"),
-                                    new DiscordButtonComponent(ButtonStyle.Primary,"h0,2","Attributes"),
-                                    new DiscordButtonComponent(ButtonStyle.Primary,"h0,3","Skills")
-                                });
-                                builder.AddComponents(new DiscordComponent[]
-                                {
-                                    new DiscordButtonComponent(ButtonStyle.Primary,"h0,4","Inventory"),
-                                    new DiscordButtonComponent(ButtonStyle.Primary,"h0,5","General"),
-                                    new DiscordButtonComponent(ButtonStyle.Primary,"h0,6","Encounter")
-                                });
                                 break;
                             case "1":
                                 builder.AddEmbed(new DiscordEmbedBuilder()
@@ -464,18 +470,6 @@ namespace Resonance.Services
                                     "• `/Characters Rename [New Name]` Renames your Active Character.\n" +
                                     "• `/Characters LevelUp {Levels}` Levels up your Active Character. Levels defaults to 1.\n" +
                                     "• `/Characters LevelDown {Levels}` Levels down your Active Characters. Levels defaults to 1."));
-                                builder.AddComponents(new DiscordComponent[]
-                                {
-                                    new DiscordButtonComponent(ButtonStyle.Primary,"h0,1","Characters"),
-                                    new DiscordButtonComponent(ButtonStyle.Primary,"h0,2","Attributes"),
-                                    new DiscordButtonComponent(ButtonStyle.Primary,"h0,3","Skills")
-                                });
-                                builder.AddComponents(new DiscordComponent[]
-                                {
-                                    new DiscordButtonComponent(ButtonStyle.Primary,"h0,4","Inventory"),
-                                    new DiscordButtonComponent(ButtonStyle.Primary,"h0,5","General"),
-                                    new DiscordButtonComponent(ButtonStyle.Primary,"h0,6","Encounter")
-                                });
                                 break;
                             case "2":
                                 builder.AddEmbed(new DiscordEmbedBuilder()
@@ -490,18 +484,7 @@ namespace Resonance.Services
                                 "• `/Attributes Agility [Value]` Sets your Active Character's agility attribute. Cannot go below 1 or above 7.\n" +
                                 "• `/Attributes Insight [Value]` Sets your Active Character's insight attribute. Cannot go below 1 or above 7.\n" +
                                 "• `/Attributes Presence [Value]` Sets your Active Character's presence attribute. Cannot go below 1 or above 7."));
-                                builder.AddComponents(new DiscordComponent[]
-                                {
-                                    new DiscordButtonComponent(ButtonStyle.Primary,"h0,1","Characters"),
-                                    new DiscordButtonComponent(ButtonStyle.Primary,"h0,2","Attributes"),
-                                    new DiscordButtonComponent(ButtonStyle.Primary,"h0,3","Skills")
-                                });
-                                builder.AddComponents(new DiscordComponent[]
-                                {
-                                    new DiscordButtonComponent(ButtonStyle.Primary,"h0,4","Inventory"),
-                                    new DiscordButtonComponent(ButtonStyle.Primary,"h0,5","General"),
-                                    new DiscordButtonComponent(ButtonStyle.Primary,"h0,6","Encounter")
-                                });
+
                                 break;
                             case "3":
                                 builder.AddEmbed(new DiscordEmbedBuilder()
@@ -514,18 +497,7 @@ namespace Resonance.Services
                                 "• `/Skills Add [Name] [Description] [Type] {Ranks}` Adds a new Skill to your active character. Ranks defaults to 1.\n" +
                                 "• `/Skills Ranks [Name] [Ranks]` Sets the Ranks an existing skill on your Active character.\n" +
                                 "• `/Skills Delete [Name]` Remove a skill from your Active Character."));
-                                builder.AddComponents(new DiscordComponent[]
-                                {
-                                    new DiscordButtonComponent(ButtonStyle.Primary,"h0,1","Characters"),
-                                    new DiscordButtonComponent(ButtonStyle.Primary,"h0,2","Attributes"),
-                                    new DiscordButtonComponent(ButtonStyle.Primary,"h0,3","Skills")
-                                });
-                                builder.AddComponents(new DiscordComponent[]
-                                {
-                                    new DiscordButtonComponent(ButtonStyle.Primary,"h0,4","Inventory"),
-                                    new DiscordButtonComponent(ButtonStyle.Primary,"h0,5","General"),
-                                    new DiscordButtonComponent(ButtonStyle.Primary,"h0,6","Encounter")
-                                });
+
                                 break;
                             case "4":
                                 builder.AddEmbed(new DiscordEmbedBuilder()
@@ -540,18 +512,6 @@ namespace Resonance.Services
                                 "• `/Inventory Duplicate [Name] [Amount]` Takes an existing item in your active character's inventory and add copies of it. Useful for consumables and other items which are held in stacks.\n" +
                                 "• `/Inventory Use [Name] {Amount}` Equips/Unequips a piece of equipment in your active character's inventory. If the item is a consumable, it uses one or more of the item. This command never deletes consumables whose amount reaches 0, allowing you to add more copies of the item using `/Inventory Duplicate`.\n" +
                                 "• `/Inventory Discard [Name]` Permanently deletes an item from your Active character inventory. Only use this if you want to entirely remove an item from inventory insteadof just using the item."));
-                                builder.AddComponents(new DiscordComponent[]
-                                {
-                                    new DiscordButtonComponent(ButtonStyle.Primary,"h0,1","Characters"),
-                                    new DiscordButtonComponent(ButtonStyle.Primary,"h0,2","Attributes"),
-                                    new DiscordButtonComponent(ButtonStyle.Primary,"h0,3","Skills")
-                                });
-                                builder.AddComponents(new DiscordComponent[]
-                                {
-                                    new DiscordButtonComponent(ButtonStyle.Primary,"h0,4","Inventory"),
-                                    new DiscordButtonComponent(ButtonStyle.Primary,"h0,5","General"),
-                                    new DiscordButtonComponent(ButtonStyle.Primary,"h0,6","Encounter")
-                                });
                                 break;
                             case "5":
                                 builder.AddEmbed(new DiscordEmbedBuilder()
@@ -566,18 +526,6 @@ namespace Resonance.Services
                                 "• `/Image [Image URL]` Changes your Active Character's image. The url must be a valid URL for a .png or .jpeg image.\n" +
                                 "• `/Health [Amount]` Add or subtract health from your active character. Health cannot go under 0 or above your Maximum.\n" +
                                 "• `/Luck [Amount]` Add or subtract from your active character's Luck pool. Luck cannot go under 0 or above 10."));
-                                builder.AddComponents(new DiscordComponent[]
-                                {
-                                    new DiscordButtonComponent(ButtonStyle.Primary,"h0,1","Characters"),
-                                    new DiscordButtonComponent(ButtonStyle.Primary,"h0,2","Attributes"),
-                                    new DiscordButtonComponent(ButtonStyle.Primary,"h0,3","Skills")
-                                });
-                                builder.AddComponents(new DiscordComponent[]
-                                {
-                                    new DiscordButtonComponent(ButtonStyle.Primary,"h0,4","Inventory"),
-                                    new DiscordButtonComponent(ButtonStyle.Primary,"h0,5","General"),
-                                    new DiscordButtonComponent(ButtonStyle.Primary,"h0,6","Encounter")
-                                });
                                 break;
                             case "6":
                                 builder.AddEmbed(new DiscordEmbedBuilder()
@@ -594,26 +542,215 @@ namespace Resonance.Services
                                 "• `/Encounter Remove [Name]` Removes a combatant from the current encounter.\n" +
                                 "• `/Encounter Move [Name] [Position]` Moves a combatant from one position to another. Only the Game Master can move NPCs or combatants other than your own active character.")
                                 .AddField("Combat Buttons","Unlike most of the other commands. A god portion of the controls for encounters are done using button as opposed to commands! For example, For a player to join an encounter, they must press the Join buttons to join the encounter in one of the 3 combat zones. And then in order to start your encounter, you press the `Start` button. During combat, you can move forwards or backwards in the turn order by using the `Next Turn` and `Previous Turn` buttons. And the current combatant can use the `Move` buttons to move from one field to another. "));
-                                builder.AddComponents(new DiscordComponent[]
+                                
+                                break;
+                            case "7":
+                                builder.AddEmbed(new DiscordEmbedBuilder()
+                                .WithTitle("Help Files - Commands")
+                                .WithDescription("" +
+                                "The following is the list of all commands available to use with this bot. All parameters wrapped around brackets `[Example]` are mandatory. While parameters wrapped around curly brackets `{example}` are optional and can be excluded from commands.\n\n" +
+                                "Commands are divided into 6 mayor groups: Character, Attributes, Skills, Inventory, General and Encounter commands.\n" +
+                                "Most, if not all, of these commands require you to have an **Active Character**. When you create a character using `/Characters Create`, this character is automatically assigned as your active character. You can then use the `/Character` command to switch your active character.")
+                                .AddField("Condition Commands", "These commands are used managing an active character's Conditions. These offer no automation and meant to act as reminders for the user.\n" +
+                                "• `/Conidtion Add [Name] [Description]` Add a condition to your active character.\n" +
+                                "• `/Condition Remove [Name]` Remove a condition from your active character."));
+                                break;
+                            case "8":
+                                builder.AddEmbed(new DiscordEmbedBuilder()
+                                .WithTitle("Help Files - Commands")
+                                .WithDescription("" +
+                                "The following is the list of all commands available to use with this bot. All parameters wrapped around brackets `[Example]` are mandatory. While parameters wrapped around curly brackets `{example}` are optional and can be excluded from commands.\n\n" +
+                                "Commands are divided into 6 mayor groups: Character, Attributes, Skills, Inventory, General and Encounter commands.\n" +
+                                "Most, if not all, of these commands require you to have an **Active Character**. When you create a character using `/Characters Create`, this character is automatically assigned as your active character. You can then use the `/Character` command to switch your active character.")
+                                .AddField("Technique Commands", "These commands are used to manage Techniques on a character. Techniques are simply pre-made abilities your character uses often.\n" +
+                                "• `/Technique Add [Name] [Actions] [Attribute] [Skill] [Description]`\n" +
+                                "> Adds a new technique to your active character. An Attribute and valid skill must be provided.\n" +
+                                "• `/Technique Remove [Name]` Remove a Technique from your active character.\n" +
+                                "• `/Tech [Name] {Modifier}` Makes a check based on a Technique on your active character. This functions like `/Check`, but it uses the Attribute and Skill you set up for your Technique."));
+                                break;
+                            case "9":
+                                builder.AddEmbed(new DiscordEmbedBuilder()
+                                .WithTitle("Help Files - Commands")
+                                .WithDescription("" +
+                                "The following is the list of all commands available to use with this bot. All parameters wrapped around brackets `[Example]` are mandatory. While parameters wrapped around curly brackets `{example}` are optional and can be excluded from commands.\n\n" +
+                                "Commands are divided into 6 mayor groups: Character, Attributes, Skills, Inventory, General and Encounter commands.\n" +
+                                "Most, if not all, of these commands require you to have an **Active Character**. When you create a character using `/Characters Create`, this character is automatically assigned as your active character. You can then use the `/Character` command to switch your active character.")
+                                .AddField("Party Commands", "These commands allow you manage parties. When you create a party, users can click the `Join Party` button to join to a party. When a player joins your party, you can use the commands listed below to add Items or Conditions to the characters in your party (As well as adjust their Health)\nParties are Server-based. A party created in Server A does not exist in Server B.\n" +
+                                "• `/Party Create` Add [Name]` Create a new party.\n" +
+                                "• `/Party Disband [Name]` Permanently deletes a party.\n" +
+                                "• `/Party View [Name]` View the info on a party. This shows the Join and Leave party buttons.\n" +
+                                "• `/Party Health [Character Name] [Value]` Increase or Decrease a party member's health.\n" +
+                                "• `/Party Condition [Character Name] [Condition Name] [Condition Description]` Adds a Condition to the inputted party member.\n" +
+                                "• `/Party Item [Character Name] [Item Name] [Item Description] [Item Type] {Quantity}` Creates and gives an item to the inputted party member. Quantity defaults to 1."));
+                                break;
+                        }
+                        builder.AddComponents(new DiscordComponent[]
                                 {
                                     new DiscordButtonComponent(ButtonStyle.Primary,"h0,1","Characters"),
                                     new DiscordButtonComponent(ButtonStyle.Primary,"h0,2","Attributes"),
-                                    new DiscordButtonComponent(ButtonStyle.Primary,"h0,3","Skills")
+                                    new DiscordButtonComponent(ButtonStyle.Primary,"h0,3","Skills"),
+                                    new DiscordButtonComponent(ButtonStyle.Primary,"h0,7","Conditions")
                                 });
-                                builder.AddComponents(new DiscordComponent[]
-                                {
+                        builder.AddComponents(new DiscordComponent[]
+                        {
+                                    new DiscordButtonComponent(ButtonStyle.Primary,"h0,8","Techniques"),
                                     new DiscordButtonComponent(ButtonStyle.Primary,"h0,4","Inventory"),
                                     new DiscordButtonComponent(ButtonStyle.Primary,"h0,5","General"),
-                                    new DiscordButtonComponent(ButtonStyle.Primary,"h0,6","Encounter")
-                                });
-                                break;
-                        }
+                                    new DiscordButtonComponent(ButtonStyle.Primary,"h0,6","Encounter"),
+                                    new DiscordButtonComponent(ButtonStyle.Primary,"h0,9","Parties")
+                        });
                         await e.Interaction.CreateResponseAsync(InteractionResponseType.UpdateMessage,
                             builder);
                         break;
                 }
             }
-        
+            else if (e.Id.StartsWith("p"))
+            {
+                int ID = int.Parse(e.Id.Substring(1));
+
+                var U = utils.GetUser(e.User.Id);
+
+                var A = U.Active;
+
+                if(A == null)
+                {
+                    await e.Interaction.CreateResponseAsync(InteractionResponseType.Pong);
+                    return;
+                }
+                else
+                {
+                    var col = database.GetCollection<Party>("Parties");
+
+                    Party P = col.Include(x => x.Actors).FindById(ID);
+
+                    if (P.Actors.Exists(x => x.Id == A.Id))
+                    {
+                        await e.Interaction.CreateResponseAsync(InteractionResponseType.Pong);
+                        return;
+                    }
+
+                    P.Actors.Add(A);
+
+                    col.Update(P);
+
+                    var GM = await e.Guild.GetMemberAsync(P.GameMaster);
+
+                    var EmbedBuilder = new DiscordEmbedBuilder()
+                        .WithTitle(P.Name)
+                        .WithDescription($"**Game Master**\n> {GM.Mention}");
+                    var sb = new StringBuilder();
+
+                    foreach(var member in P.Actors)
+                    {
+                        var player = await e.Guild.GetMemberAsync(member.Owner);
+
+                        sb.AppendLine($"• {member.Name} - Played By: {player.Mention}");
+                    }
+
+                    if(sb.Length == 0)
+                    {
+                        EmbedBuilder.AddField("Party Members", "None! Use the Join button to join this party as your active character!");
+                    }
+                    else
+                    {
+                        EmbedBuilder.AddField("Party Members", sb.ToString());
+                    }
+
+                    await e.Interaction.CreateResponseAsync(InteractionResponseType.UpdateMessage,
+                        new DiscordInteractionResponseBuilder()
+                            .WithContent(e.Message.Content)
+                            .AddEmbed(EmbedBuilder.Build())
+                            .AddComponents(new DiscordComponent[] 
+                            {
+                                new DiscordButtonComponent(ButtonStyle.Primary,$"p{P.ID}","Join Party"),
+                                new DiscordButtonComponent(ButtonStyle.Secondary,$"l{P.ID}","Leave Party")
+                            }));
+                }
+            }
+            else if (e.Id.StartsWith("l"))
+            {
+                int id = int.Parse(e.Id.Substring(1));
+                var U = utils.GetUser(e.User.Id);
+
+                var A = U.Active;
+
+                if (A == null)
+                {
+                    await e.Interaction.CreateResponseAsync(InteractionResponseType.Pong);
+                    return;
+                }
+                else
+                {
+                    var col = database.GetCollection<Party>("Parties");
+
+                    Party P = col.Include(x => x.Actors).FindById(id);
+
+                    if (!P.Actors.Exists(x => x.Id == A.Id))
+                    {
+                        await e.Interaction.CreateResponseAsync(InteractionResponseType.Pong);
+                        return;
+                    }
+
+                    int index = P.Actors.FindIndex(x => x.Id == A.Id);
+
+                    P.Actors.RemoveAt(index);
+
+                    col.Update(P);
+
+                    var GM = await e.Guild.GetMemberAsync(P.GameMaster);
+
+                    var EmbedBuilder = new DiscordEmbedBuilder()
+                        .WithTitle(P.Name)
+                        .WithDescription($"**Game Master**\n> {GM.Mention}");
+                    var sb = new StringBuilder();
+
+                    foreach (var member in P.Actors)
+                    {
+                        var player = await e.Guild.GetMemberAsync(member.Owner);
+
+                        sb.AppendLine($"• {member.Name} - Played By: {player.Mention}");
+                    }
+
+                    if (sb.Length == 0 || P.Actors.Count == 0)
+                    {
+                        EmbedBuilder.AddField("Party Members", "None! Use the Join button to join this party as your active character!");
+                    }
+                    else
+                    {
+                        EmbedBuilder.AddField("Party Members", sb.ToString());
+                    }
+
+                    await e.Interaction.CreateResponseAsync(InteractionResponseType.UpdateMessage,
+                        new DiscordInteractionResponseBuilder()
+                            .WithContent(e.Message.Content)
+                            .AddEmbed(EmbedBuilder.Build())
+                            .AddComponents(new DiscordComponent[]
+                            {
+                                new DiscordButtonComponent(ButtonStyle.Primary,$"p{P.ID}","Join Party"),
+                                new DiscordButtonComponent(ButtonStyle.Secondary,$"l{P.ID}","Leave Party")
+                            }));
+                }
+                
+            }
+            else if (e.Id.StartsWith("dis"))
+            {
+                int id = int.Parse(e.Id.Substring(3));
+
+                var col = database.GetCollection<Party>("Parties");
+
+                Party P = col.FindById(id);
+
+                if(e.User.Id != P.GameMaster)
+                {
+                    await e.Interaction.CreateResponseAsync(InteractionResponseType.Pong);
+                    return;
+                }
+                col.Delete(id);
+
+                await e.Interaction.CreateResponseAsync(InteractionResponseType.UpdateMessage,
+                    new DiscordInteractionResponseBuilder()
+                        .WithContent($"Successfully deleted party {P.Name}!"));
+            }
         }
     }
 }
