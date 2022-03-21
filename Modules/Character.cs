@@ -54,6 +54,8 @@ namespace Resonance.Modules
 
                     U.Active = C;
 
+                    Utils.UpdateUser(U);
+
                     await ctx.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource,
                         U.Active.Render(0).WithContent($"Changed active character to {C.Name}."));
                     return;
